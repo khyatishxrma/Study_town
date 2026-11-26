@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Town • Cozy OS Study Space</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#faf6ee',
+                            200: '#f3ece0',
+                            300: '#e5dac7',
+                        },
+                        sage: {
+                            500: '#689371',
+                            600: '#4b7a57',
+                            700: '#396144',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="w-screen h-screen overflow-hidden bg-[#2b3328] font-sans text-[#2d2a26] relative">
+
+    <!-- =====================================================================
+         0. STARTUP ONBOARDING, ACCOUNT CREATION & AVATAR STUDIO OVERLAY
+         ===================================================================== -->
+    <div id="onboardingOverlay" class="fixed inset-0 z-50 bg-[#232920]/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto transition-opacity duration-500">
+        <div class="frosted-cream w-full max-w-4xl rounded-3xl border border-white/75 overflow-hidden shadow-2xl my-auto">
+            
+            <!-- Top Welcome Banner -->
+            <div class="px-6 py-4 bg-cream-50/85 border-b border-cream-300/80 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-sage-600 text-white flex items-center justify-center text-lg shadow-xs">
+                        🌱
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="font-bold text-lg text-[#2d2a26]">Welcome to Study Town</h1>
+                            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#eef3ee] text-sage-700 border border-sage-500/30">init / PID 1</span>
+                        </div>
+                        <p class="text-xs text-[#6e6456]">Create your student process, customize your cozy avatar, and enter the greenhouse.</p>
+                    </div>
+                </div>
+                <span class="text-[11px] font-mono text-[#7a7060] bg-cream-200/80 px-3 py-1 rounded-full">
+                    Kernel v2.4 • Cozy Paws Edition
+                </span>
+            </div>
+
+            <!-- Main Onboarding Form & Avatar Studio -->
+            <div id="onboardingFormStep" class="p-5 sm:p-7 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                
+                <!-- Left 5 Cols: Live Animated Pixel Avatar Preview Stage -->
+                <div class="lg:col-span-5 leaf-card rounded-2xl p-5 flex flex-col items-center text-center space-y-3 bg-gradient-to-b from-[#f3f7f2] to-[#faf8f5]">
+                    <div class="w-full flex items-center justify-between text-[11px] font-mono text-sage-700 font-bold">
+                        <span>LIVE AVATAR PREVIEW</span>
+                        <span class="px-2 py-0.5 rounded bg-sage-600/10">PID #101</span>
+                    </div>
+
+                    <!-- Pixel Canvas Stage -->
+                    <div class="relative w-44 h-44 rounded-2xl bg-gradient-to-b from-[#bce3d4] via-[#d7efd9] to-[#f7e5c3] border-2 border-[#76a382] flex items-center justify-center shadow-inner overflow-hidden">
+                        <canvas id="avatarPreviewCanvas" width="176" height="176" style="image-rendering: pixelated;" class="w-full h-full"></canvas>
+                        <div id="previewNameTag" class="absolute bottom-2.5 px-3 py-0.5 rounded-full bg-[#2b231d]/90 text-[#fde68a] font-mono text-[10px] font-bold shadow border border-amber-400/30">
+                            Khyati • NEW
+                        </div>
+                    </div>
+
+                    <!-- Animal Species Selector Pills -->
+                    <div class="w-full space-y-1.5 pt-1">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-[#6e6456]">Choose Animal Character</label>
+                        <div class="grid grid-cols-3 gap-1.5" id="speciesSelectorGrid">
+                            <button type="button" onclick="onboardingApp.setSpecies('shiba')" data-species="shiba" class="species-btn px-2 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">🐕 Shiba</button>
+                            <button type="button" onclick="onboardingApp.setSpecies('cat')" data-species="cat" class="species-btn px-2 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">🐱 Calico</button>
+                            <button type="button" onclick="onboardingApp.setSpecies('bunny')" data-species="bunny" class="species-btn px-2 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">🐰 Bunny</button>
+                            <button type="button" onclick="onboardingApp.setSpecies('panda')" data-species="panda" class="species-btn px-2 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer">🦊 Red Panda</button>
+                            <button type="button" onclick="onboardingApp.setSpecies('retriever')" data-species="retriever" class="species-btn px-2 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer col-span-2">🐶 Golden Retriever</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right 7 Cols: Account Details & Accessories -->
+                <form onsubmit="onboardingApp.submitProfile(event)" class="lg:col-span-7 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-bold text-[#4a4338] mb-1">Display Name <span class="text-rose-500">*</span></label>
+                            <input type="text" id="obDisplayName" value="Khyati" maxlength="16" required oninput="onboardingApp.updatePreviewTag()" placeholder="e.g., Khyati" class="w-full px-3.5 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold focus:outline-none focus:border-sage-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-[#4a4338] mb-1">Student Handle</label>
+                            <div class="flex items-center rounded-xl bg-white border border-cream-300 px-3 py-2 focus-within:border-sage-600">
+                                <span class="text-xs font-mono text-[#8c7f6a] mr-1">@</span>
+                                <input type="text" id="obUsername" value="khyati_os" maxlength="18" placeholder="username" class="w-full bg-transparent text-xs font-mono focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-[#4a4338] mb-1">Study Major / Focus Track</label>
+                        <select id="obMajor" class="w-full px-3.5 py-2 rounded-xl bg-white border border-cream-300 text-xs font-semibold text-[#2d2a26] focus:outline-none focus:border-sage-600">
+                            <option value="Operating Systems & Kernel Dev">Operating Systems & Kernel Dev</option>
+                            <option value="Computer Science & Algorithms">Computer Science & Algorithms</option>
+                            <option value="Data Science & Machine Learning">Data Science & Machine Learning</option>
+                            <option value="General Deep Work & Reading">General Deep Work & Reading</option>
+                        </select>
+                    </div>
+
+                    <!-- Accessory / Hat Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-[#4a4338] mb-1.5">Headgear / Study Accessory</label>
+                        <div class="flex flex-wrap gap-1.5" id="accessorySelectorRow">
+                            <button type="button" onclick="onboardingApp.setAccessory('none')" data-acc="none" class="acc-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer">None</button>
+                            <button type="button" onclick="onboardingApp.setAccessory('headphones')" data-acc="headphones" class="acc-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer">🎧 Headphones</button>
+                            <button type="button" onclick="onboardingApp.setAccessory('sprout')" data-acc="sprout" class="acc-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer">🌱 Sprout</button>
+                            <button type="button" onclick="onboardingApp.setAccessory('glasses')" data-acc="glasses" class="acc-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer">👓 Glasses</button>
+                            <button type="button" onclick="onboardingApp.setAccessory('wizard')" data-acc="wizard" class="acc-btn px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer">🧙‍♂️ Wizard Hat</button>
+                        </div>
+                    </div>
+
+                    <!-- Scarf / Outfit Color Swatches -->
+                    <div>
+                        <label class="block text-xs font-bold text-[#4a4338] mb-1.5">Cozy Scarf Color</label>
+                        <div class="flex items-center gap-2.5" id="scarfColorRow">
+                            <button type="button" onclick="onboardingApp.setScarf('#52795d')" data-color="#52795d" class="scarf-btn w-7 h-7 rounded-full bg-[#52795d] border-2 border-white shadow cursor-pointer"></button>
+                            <button type="button" onclick="onboardingApp.setScarf('#d96b38')" data-color="#d96b38" class="scarf-btn w-7 h-7 rounded-full bg-[#d96b38] border-2 border-white shadow cursor-pointer"></button>
+                            <button type="button" onclick="onboardingApp.setScarf('#e07a5f')" data-color="#e07a5f" class="scarf-btn w-7 h-7 rounded-full bg-[#e07a5f] border-2 border-white shadow cursor-pointer"></button>
+                            <button type="button" onclick="onboardingApp.setScarf('#6d92b0')" data-color="#6d92b0" class="scarf-btn w-7 h-7 rounded-full bg-[#6d92b0] border-2 border-white shadow cursor-pointer"></button>
+                            <button type="button" onclick="onboardingApp.setScarf('#c9934b')" data-color="#c9934b" class="scarf-btn w-7 h-7 rounded-full bg-[#c9934b] border-2 border-white shadow cursor-pointer"></button>
+                            <button type="button" onclick="onboardingApp.setScarf('#9b7ede')" data-color="#9b7ede" class="scarf-btn w-7 h-7 rounded-full bg-[#9b7ede] border-2 border-white shadow cursor-pointer"></button>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-cream-300/70">
+                        <span class="text-[11px] font-mono text-[#6e6456]">
+                            <i class="fa-solid fa-microchip text-amber-600 mr-1"></i> Spawns Process Control Block (PCB)
+                        </span>
+                        <button type="submit" class="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4b7a57] via-[#5c8d67] to-[#d97736] hover:brightness-110 text-white font-bold text-xs shadow-lg transition flex items-center gap-2 cursor-pointer">
+                            <span>fork() & Enter Study Town</span>
+                            <i class="fa-solid fa-sparkles"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Charming 1.5s OS Boot / fork() & exec() Sequence -->
+            <div id="onboardingBootStep" class="hidden p-8 sm:p-12 flex flex-col items-center justify-center text-center space-y-4">
+                <div class="w-14 h-14 rounded-2xl bg-[#221f1d] text-emerald-400 flex items-center justify-center text-2xl shadow-lg animate-bounce">
+                    <i class="fa-solid fa-terminal"></i>
+                </div>
+                <h3 class="font-bold text-base text-[#2d2a26]">Initializing Student Process Control Block...</h3>
+                <div id="bootConsoleLines" class="w-full max-w-md bg-[#221f1d] text-cream-100 font-mono text-[11px] text-left p-4 rounded-2xl space-y-1.5 shadow-inner border border-white/10">
+                </div>
+                <div class="w-full max-w-md h-2 rounded-full bg-cream-300 overflow-hidden">
+                    <div id="bootProgressBar" class="h-full bg-sage-600 transition-all duration-300" style="width: 10%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         1. FULL-SCREEN COZY GREENHOUSE PIXEL-ART CANVAS
+         ===================================================================== -->
+    <canvas id="greenhouseCanvas" style="image-rendering: pixelated;" class="w-full h-full block cursor-pointer"></canvas>
+
+    <!-- =====================================================================
+         2. FLOATING HUD CONTROLS (TOP-LEFT, TOP-RIGHT, BOTTOM DOCK & PLAYER)
+         ===================================================================== -->
+    <!-- TOP-LEFT: Pomodoro CPU Burst Timer, Location Pill & Pinned Sticky Note -->
+    <div class="fixed top-4 left-4 z-30 flex flex-col gap-2 max-w-[calc(100vw-2rem)]">
+        <div class="hud-pill rounded-full px-4 py-2 flex items-center gap-3 text-cream-50 w-fit">
+            <span id="timerDisplay" class="font-mono font-bold text-lg tracking-tight text-amber-300">25:00</span>
+            <span class="text-xs font-medium text-cream-300">CPU Burst</span>
+            <button id="timerToggleBtn" onclick="studyTimer.toggle()" class="px-3.5 py-1 rounded-full bg-sage-600 hover:bg-sage-500 text-white text-xs font-bold transition cursor-pointer">
+                Start
+            </button>
+            <button onclick="studyTimer.reset(25)" class="text-cream-300 hover:text-white text-xs px-1 cursor-pointer" title="Reset Quantum">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <div class="hud-pill rounded-full px-3.5 py-1.5 flex items-center gap-2 text-xs text-cream-100 w-fit">
+                <i class="fa-solid fa-seedling text-emerald-400"></i>
+                <span class="font-semibold">Study Town Greenhouse</span>
+                <span id="hudUserBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">PID 101 • Khyati</span>
+            </div>
+        </div>
+
+        <!-- Pinned Sticky Note Widget -->
+        <div id="pinnedNoteWidget" class="hidden w-64 rounded-2xl bg-[#fef3c7]/95 backdrop-blur-md border border-amber-300 p-3.5 shadow-xl text-[#451a03]">
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <span id="pinnedNoteTitle" class="font-bold text-xs truncate">Pinned Formula</span>
+                <button onclick="notesApp.unpinFromHud()" class="text-amber-800 hover:text-rose-600 text-xs cursor-pointer" title="Unpin">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p id="pinnedNoteBody" class="text-[11px] whitespace-pre-line leading-relaxed max-h-28 overflow-y-auto"></p>
+        </div>
+    </div>
+
+    <!-- TOP-RIGHT: Focus Coins, Online Peers, Profile Button & Map/Zoom Controls -->
+    <div class="fixed top-4 right-4 z-30 flex items-start gap-2.5">
+        <div class="hud-pill rounded-full px-3.5 py-1.5 flex items-center gap-3 text-xs font-semibold text-cream-50">
+            <span class="flex items-center gap-1.5 text-amber-300" title="Focus Coins Earned">
+                <i class="fa-solid fa-coins"></i> <span id="hudCoins">1,250</span>
+            </span>
+            <span class="w-px h-3.5 bg-white/15"></span>
+            <span class="flex items-center gap-1.5 text-sky-300" title="Active Study Processes in Room">
+                <i class="fa-solid fa-users"></i> <span id="hudOnlineCount">6</span>/12
+            </span>
+            <span class="w-px h-3.5 bg-white/15"></span>
+            <button onclick="onboardingApp.openEditor()" class="flex items-center gap-1.5 text-emerald-300 hover:text-white transition cursor-pointer" title="Edit Avatar & Student Profile">
+                <i class="fa-solid fa-user-pen"></i>
+                <span id="hudProfileBtnName" class="hidden sm:inline">Profile</span>
+            </button>
+        </div>
+
+        <div class="hud-pill rounded-2xl p-1.5 flex flex-col items-center gap-1 text-cream-200 text-xs">
+            <button onclick="greenhouse.changeZoom(0.12)" class="w-7 h-7 rounded-xl hover:bg-white/10 flex items-center justify-center cursor-pointer" title="Zoom In">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            <button onclick="greenhouse.changeZoom(-0.12)" class="w-7 h-7 rounded-xl hover:bg-white/10 flex items-center justify-center cursor-pointer" title="Zoom Out">
+                <i class="fa-solid fa-minus"></i>
+            </button>
+            <button onclick="greenhouse.resetCamera()" class="w-7 h-7 rounded-xl hover:bg-white/10 flex items-center justify-center cursor-pointer" title="Center Camera">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastBox" class="hidden fixed top-20 left-1/2 -translate-x-1/2 z-40 hud-pill rounded-full px-4 py-2 text-xs font-semibold text-amber-200 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-emerald-400"></i>
+        <span id="toastText">Notification</span>
+    </div>
+
+    <!-- BOTTOM-LEFT: Live dmesg Kernel Log Ticker -->
+    <div onclick="modalManager.open('osMonitorModal')" class="hidden md:flex fixed bottom-4 left-4 z-30 hud-pill rounded-full px-3.5 py-1.5 items-center gap-2 text-[11px] font-mono text-emerald-300 max-w-sm cursor-pointer hover:border-emerald-400/50 transition" title="Click to open Kernel Monitor">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+        <span id="dmesgTickerText" class="truncate">[00:00:04] SEM: Window_Sofa_Sem initialized (val=3)</span>
+    </div>
+
+    <!-- BOTTOM-CENTER: Main Cozy Study & OS Dock -->
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 hud-pill rounded-3xl px-3 py-2 flex items-center gap-1.5 sm:gap-2.5 text-cream-100">
+        <button onclick="greenhouse.findFreeSeat()" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-chair text-sm text-amber-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Sit</span>
+        </button>
+        <button onclick="modalManager.open('flashcardsModal')" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-layer-group text-sm text-pink-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Flashcards</span>
+        </button>
+        <button onclick="modalManager.open('notesModal')" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-book-open text-sm text-sky-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Notes</span>
+        </button>
+        <button onclick="modalManager.open('schedulerModal')" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-microchip text-sm text-emerald-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Scheduler</span>
+        </button>
+        <button onclick="modalManager.open('statsModal')" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-chart-pie text-sm text-purple-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Insights</span>
+        </button>
+        <button onclick="modalManager.open('osMonitorModal')" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-solid fa-server text-sm text-orange-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Kernel</span>
+        </button>
+        <button onclick="greenhouse.cycleEmote()" class="flex flex-col items-center justify-center px-3 py-1.5 rounded-2xl hover:bg-white/10 transition cursor-pointer">
+            <i class="fa-regular fa-face-smile text-sm text-yellow-300"></i>
+            <span class="text-[10px] font-semibold mt-1">Emote</span>
+        </button>
+    </div>
+
+    <!-- BOTTOM-RIGHT: Compact Lo-Fi Music Player -->
+    <div class="hidden sm:flex fixed bottom-4 right-4 z-30 hud-pill rounded-2xl px-3.5 py-2.5 items-center gap-3 text-cream-50">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-rose-500 flex items-center justify-center text-white shadow">
+            <i class="fa-solid fa-music text-xs"></i>
+        </div>
+        <div class="min-w-0 max-w-[135px]">
+            <div class="text-[10px] font-mono text-emerald-300 uppercase">Lo-Fi Daemon</div>
+            <div id="trackTitle" class="text-xs font-semibold truncate">rain on mars - Kummel</div>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <button onclick="lofiPlayer.prevTrack()" class="w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-backward-step"></i></button>
+            <button onclick="lofiPlayer.togglePlay()" class="w-8 h-8 rounded-full bg-cream-50 text-[#221e1b] flex items-center justify-center text-xs font-bold cursor-pointer"><i id="playPauseIcon" class="fa-solid fa-play ml-0.5"></i></button>
+            <button onclick="lofiPlayer.nextTrack()" class="w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-xs cursor-pointer"><i class="fa-solid fa-forward-step"></i></button>
+            <button id="rainToggleBtn" onclick="lofiPlayer.toggleRain()" class="w-7 h-7 rounded-full hover:bg-white/10 flex items-center justify-center text-xs text-cream-300 cursor-pointer" title="Toggle Rain Sound"><i class="fa-solid fa-cloud-rain"></i></button>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         3. FROSTED-CREAM PRODUCTIVITY & OS MODALS
+         ===================================================================== -->
+
+    <!-- MODAL 1: FLASHCARDS DECK STUDIO -->
+    <div id="flashcardsModal" class="hidden fixed inset-0 z-40 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="frosted-cream w-full max-w-3xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 bg-cream-50/90 border-b border-cream-300 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-pink-500 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-layer-group"></i></span>
+                    <h2 class="font-bold text-base">Flashcard Deck Studio</h2>
+                </div>
+                <button onclick="modalManager.close('flashcardsModal')" class="w-8 h-8 rounded-full hover:bg-cream-200 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-5 overflow-y-auto">
+                <!-- Decks Sidebar -->
+                <div class="md:col-span-4 space-y-3">
+                    <div class="text-xs font-bold uppercase tracking-wider text-[#6e6456]">Your Study Decks</div>
+                    <div id="deckListContainer" class="space-y-1.5"></div>
+                    <div class="pt-2 border-t border-cream-300 flex gap-1.5">
+                        <input id="newDeckNameInput" type="text" placeholder="New deck name..." class="w-full px-3 py-1.5 rounded-xl bg-white border border-cream-300 text-xs">
+                        <button onclick="flashcardsApp.createDeck()" class="px-3 py-1.5 rounded-xl bg-sage-600 text-white text-xs font-bold cursor-pointer">+</button>
+                    </div>
+                </div>
+                <!-- Active Card Stage -->
+                <div class="md:col-span-8 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span id="activeDeckTitle" class="font-bold text-sm text-sage-700">Operating Systems Core</span>
+                        <span id="cardCounter" class="text-xs font-mono text-[#6e6456]">Card 1 of 3</span>
+                    </div>
+                    <!-- 3D Flip Card -->
+                    <div onclick="flashcardsApp.flipCard()" class="flashcard-perspective h-48 cursor-pointer select-none">
+                        <div id="flashcardInner" class="flashcard-inner">
+                            <div class="flashcard-face leaf-card rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-white">
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-sage-600 mb-2">Question (Click to Flip)</span>
+                                <p id="cardFrontText" class="font-bold text-sm sm:text-base text-[#2d2a26]"></p>
+                            </div>
+                            <div class="flashcard-face flashcard-back leaf-card rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-[#eef5ef] border-sage-500">
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-700 mb-2">Answer</span>
+                                <p id="cardBackText" class="text-xs sm:text-sm font-medium text-[#2d2a26] leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Controls -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex gap-2">
+                            <button onclick="flashcardsApp.prevCard()" class="px-3.5 py-1.5 rounded-full bg-white border border-cream-300 text-xs font-bold hover:bg-cream-200 cursor-pointer">← Prev</button>
+                            <button onclick="flashcardsApp.nextCard()" class="px-3.5 py-1.5 rounded-full bg-white border border-cream-300 text-xs font-bold hover:bg-cream-200 cursor-pointer">Next →</button>
+                        </div>
+                        <button onclick="flashcardsApp.markMastered()" class="px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs cursor-pointer">★ Mark Mastered (+10 Coins)</button>
+                    </div>
+                    <!-- Add New Card Form -->
+                    <form onsubmit="flashcardsApp.addCard(event)" class="pt-3 border-t border-cream-300 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input id="newCardFront" type="text" placeholder="Front: Concept or Question" required class="px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs">
+                        <input id="newCardBack" type="text" placeholder="Back: Definition or Answer" required class="px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs">
+                        <button type="submit" class="sm:col-span-2 py-2 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-bold cursor-pointer">+ Add Card to Deck</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: SMART NOTES KEEPING SPACE -->
+    <div id="notesModal" class="hidden fixed inset-0 z-40 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="frosted-cream w-full max-w-3xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 bg-cream-50/90 border-b border-cream-300 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-book-open"></i></span>
+                    <h2 class="font-bold text-base">Greenhouse Study Notebook</h2>
+                </div>
+                <button onclick="modalManager.close('notesModal')" class="w-8 h-8 rounded-full hover:bg-cream-200 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-5 overflow-y-auto">
+                <div class="md:col-span-4 space-y-2.5">
+                    <button onclick="notesApp.createNote()" class="w-full py-2 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-bold cursor-pointer">+ New Study Note</button>
+                    <div id="notesListContainer" class="space-y-1.5 max-h-72 overflow-y-auto"></div>
+                </div>
+                <div class="md:col-span-8 space-y-3">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input id="noteTitleInput" oninput="notesApp.saveCurrent()" type="text" placeholder="Note Title" class="col-span-2 px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-bold">
+                        <input id="noteTagInput" oninput="notesApp.saveCurrent()" type="text" placeholder="Subject Tag" class="px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-mono">
+                    </div>
+                    <textarea id="noteBodyInput" oninput="notesApp.saveCurrent()" rows="8" placeholder="Write formulas, OS concepts, or lecture notes..." class="w-full p-3.5 rounded-2xl bg-white border border-cream-300 text-xs leading-relaxed focus:outline-none focus:border-sage-600"></textarea>
+                    <div class="flex justify-end">
+                        <button onclick="notesApp.pinToHud()" class="px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-xs cursor-pointer">
+                            <i class="fa-solid fa-thumbtack mr-1"></i> Pin Sticky Note to Desk HUD
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: OS CPU PROCESS SCHEDULER & GANTT CHART -->
+    <div id="schedulerModal" class="hidden fixed inset-0 z-40 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="frosted-cream w-full max-w-3xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 bg-cream-50/90 border-b border-cream-300 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-microchip"></i></span>
+                    <div>
+                        <h2 class="font-bold text-base">OS CPU Study Task Scheduler</h2>
+                        <p class="text-[11px] text-[#6e6456]">Schedule study tasks as Ready Queue PCBs & visualize Gantt execution</p>
+                    </div>
+                </div>
+                <button onclick="modalManager.close('schedulerModal')" class="w-8 h-8 rounded-full hover:bg-cream-200 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-4 overflow-y-auto">
+                <!-- Algorithm Selector & Avg Wait Metric -->
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white/80 p-2.5 rounded-2xl border border-cream-300">
+                    <div class="flex flex-wrap gap-1.5">
+                        <button onclick="osScheduler.setAlgorithm('FCFS')" data-alg="FCFS" class="sched-alg-btn px-3 py-1 rounded-full text-xs font-bold bg-sage-600 text-white cursor-pointer">FCFS</button>
+                        <button onclick="osScheduler.setAlgorithm('SJF')" data-alg="SJF" class="sched-alg-btn px-3 py-1 rounded-full text-xs font-bold text-[#5c5346] hover:bg-cream-200 cursor-pointer">SJF (Shortest)</button>
+                        <button onclick="osScheduler.setAlgorithm('PRIORITY')" data-alg="PRIORITY" class="sched-alg-btn px-3 py-1 rounded-full text-xs font-bold text-[#5c5346] hover:bg-cream-200 cursor-pointer">Priority</button>
+                        <button onclick="osScheduler.setAlgorithm('RR')" data-alg="RR" class="sched-alg-btn px-3 py-1 rounded-full text-xs font-bold text-[#5c5346] hover:bg-cream-200 cursor-pointer">Round Robin (Q=25m)</button>
+                    </div>
+                    <div class="text-xs font-mono font-bold text-sage-700 px-2">
+                        Avg Wait Time: <span id="avgWaitMetric">10.0m</span>
+                    </div>
+                </div>
+
+                <!-- Add Task PCB Form -->
+                <form onsubmit="osScheduler.addProcess(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <input id="procNameInput" type="text" placeholder="Study task name (e.g., Revise Deadlocks)" required class="sm:col-span-6 px-3.5 py-2 rounded-xl bg-white border border-cream-300 text-xs">
+                    <input id="procBurstInput" type="number" min="5" max="120" value="15" title="Burst Time (mins)" class="sm:col-span-2 px-3 py-2 rounded-xl bg-white border border-cream-300 text-xs font-mono">
+                    <select id="procPriorityInput" class="sm:col-span-2 px-2.5 py-2 rounded-xl bg-white border border-cream-300 text-xs font-mono">
+                        <option value="1">P1 (High)</option>
+                        <option value="2" selected>P2 (Med)</option>
+                        <option value="3">P3 (Low)</option>
+                    </select>
+                    <button type="submit" class="sm:col-span-2 py-2 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-bold cursor-pointer">+ Fork</button>
+                </form>
+
+                <!-- Ready Queue List -->
+                <div class="space-y-1.5">
+                    <div class="text-[11px] font-mono font-bold uppercase text-[#6e6456]">Ready Queue (Click Run to Dispatch to CPU Timer)</div>
+                    <div id="readyQueueList" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+                </div>
+
+                <!-- Gantt Chart -->
+                <div class="space-y-1.5">
+                    <div class="text-[11px] font-mono font-bold uppercase text-[#6e6456]">Live Gantt Execution Timeline</div>
+                    <div id="ganttChartContainer" class="flex items-stretch gap-1.5 overflow-x-auto p-2.5 rounded-2xl bg-white border border-cream-300"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: FOCUS INSIGHTS & STATS BENTO -->
+    <div id="statsModal" class="hidden fixed inset-0 z-40 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="frosted-cream w-full max-w-3xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 bg-cream-50/90 border-b border-cream-300 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-chart-pie"></i></span>
+                    <h2 class="font-bold text-base">Focus Insights & Study Analytics</h2>
+                </div>
+                <button onclick="modalManager.close('statsModal')" class="w-8 h-8 rounded-full hover:bg-cream-200 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-y-auto">
+                <div class="leaf-card rounded-2xl p-4 flex flex-col justify-between bg-gradient-to-b from-[#f3f7f2] to-white">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-sage-700">Lifetime Focus</span>
+                        <div class="text-2xl font-extrabold text-[#2d2a26] mt-1">78h 33m</div>
+                        <div class="text-xs text-[#6e6456]">129 Completed CPU Bursts</div>
+                    </div>
+                    <div class="mt-4 p-3 rounded-xl bg-cream-100 text-xs text-[#4a4338]">
+                        <strong>Today's Snapshot:</strong> 2 sessions (50m) logged in Greenhouse.
+                    </div>
+                </div>
+                <div class="leaf-card rounded-2xl p-4 space-y-2">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#6e6456]">Subject Tag Breakdown</span>
+                    <div class="space-y-2 pt-1 text-xs">
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1"><span>OS Kernel & Scheduling</span><span>48%</span></div>
+                            <div class="h-2 rounded-full bg-cream-200 overflow-hidden"><div class="h-full bg-sage-600 w-[48%]"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1"><span>Memory & Synchronization</span><span>32%</span></div>
+                            <div class="h-2 rounded-full bg-cream-200 overflow-hidden"><div class="h-full bg-amber-500 w-[32%]"></div></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between font-semibold mb-1"><span>Flashcard Revision</span><span>20%</span></div>
+                            <div class="h-2 rounded-full bg-cream-200 overflow-hidden"><div class="h-full bg-pink-500 w-[20%]"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="leaf-card rounded-2xl p-4 flex flex-col justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-[#6e6456]">Weekly Focus Momentum</span>
+                    <div class="flex items-end justify-between gap-1.5 h-28 pt-4">
+                        <div class="flex-1 bg-sage-600/40 rounded-t-lg h-[45%]" title="Mon"></div>
+                        <div class="flex-1 bg-sage-600/60 rounded-t-lg h-[70%]" title="Tue"></div>
+                        <div class="flex-1 bg-sage-600 rounded-t-lg h-[92%]" title="Wed"></div>
+                        <div class="flex-1 bg-sage-600/75 rounded-t-lg h-[65%]" title="Thu"></div>
+                        <div class="flex-1 bg-amber-500 rounded-t-lg h-[85%]" title="Fri"></div>
+                        <div class="flex-1 bg-sage-600/50 rounded-t-lg h-[50%]" title="Sat"></div>
+                        <div class="flex-1 bg-sage-600 rounded-t-lg h-[78%]" title="Sun"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-mono text-[#6e6456] pt-1">
+                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: OS KERNEL MONITOR (SEMAPHORES, PAGE TABLE & DMESG) -->
+    <div id="osMonitorModal" class="hidden fixed inset-0 z-40 bg-black/45 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="frosted-cream w-full max-w-4xl rounded-3xl border border-white/80 shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+            <div class="px-6 py-4 bg-cream-50/90 border-b border-cream-300 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-xl bg-orange-600 text-white flex items-center justify-center text-sm"><i class="fa-solid fa-server"></i></span>
+                    <div>
+                        <h2 class="font-bold text-base">OS Kernel Monitor • Memory & Synchronization</h2>
+                        <p class="text-[11px] text-[#6e6456]">Live Desk Page Table, Room Semaphores & dmesg Ring Buffer</p>
+                    </div>
+                </div>
+                <button onclick="modalManager.close('osMonitorModal')" class="w-8 h-8 rounded-full hover:bg-cream-200 flex items-center justify-center cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 overflow-y-auto">
+                <div class="lg:col-span-7 space-y-3">
+                    <div class="text-xs font-mono font-bold uppercase text-[#6e6456]">Seating Memory Page Table (Click Frame to Allocate)</div>
+                    <div id="pageTableGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
+                </div>
+                <div class="lg:col-span-5 space-y-3">
+                    <div class="text-xs font-mono font-bold uppercase text-[#6e6456]">Shared Room Semaphores</div>
+                    <div id="semaphoreStatusList" class="space-y-2"></div>
+                    <div class="text-xs font-mono font-bold uppercase text-[#6e6456] pt-1">dmesg Kernel Ring Buffer</div>
+                    <div id="kernelLogBox" class="h-36 overflow-y-auto rounded-2xl bg-[#221f1d] text-emerald-300 font-mono text-[10px] p-3 space-y-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
